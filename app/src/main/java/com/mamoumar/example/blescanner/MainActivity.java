@@ -15,9 +15,15 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
     //------------------------------------------------------------------------------------
     //Variables
     //------------------------------------------
+
+
+    //------------------------------------------
+    //OnCreate
+    //------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Ya que coarse_location es un permiso "peligroso" debemos de pedir permiso para acceder a el
+        // Ya que coarse_location es un permiso "peligroso" debemos de pedir permiso para acceder a él
         if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Se necesita el acceso a la ubicación");
@@ -87,19 +98,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //------------------------------------------------------------------------------------
+    //OnCreate
+    //------------------------------------------
 
-    // Escaner callback
-    private ScanCallback escanerCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult resultado) {
 
-            Log.i( TAG, "Dispositivo: " + resultado.getScanRecord().getManufacturerSpecificData(76));
-
-        }
-    };
 
     //------------------------------------------
-    //Empezar - Parar escaner
+    //Empezar - Parar - callback escaner
     //------------------------------------------------------------------------------------
     private void empezarEscaneo(){
         AsyncTask.execute(new Runnable() {
@@ -120,7 +126,38 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    // Escaner callback
+    private ScanCallback escanerCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult resultado) {
+
+            Log.i(TAG, "Dipositivo: " + resultado.getScanRecord());
+            /*
+            Log.i( TAG, "Manufacterer: " + resultado.getScanRecord().getManufacturerSpecificData(76));
+
+            TramaIBeacon tib = new TramaIBeacon( bytes ); //decomponemos la trama para poder llamar a metodos que nos den la info que queremos
+            Log.i(TAG, "UUID: " + tib.getUUID());
+            Log.i(TAG, "Compañia: " + tib.getCompanyID());
+            */
+
+            byte[] bytes = null;
+            bytes = resultado.getScanRecord().getBytes();
+
+            TramaIBeacon tib = new TramaIBeacon(bytes);
+            Utilidades util = new Utilidades();
+
+
+            Log.i("Debug", "UUID: " +  util.bytesToHexString(tib.getUUID()));
+            Log.i("Debug", "Major: " +  util.bytesToIntOK(tib.getMajor()));
+
+
+
+        }
+    };
     //------------------------------------------------------------------------------------
     //Empezar - Parar escaner
     //------------------------------------------
+
+
 }
