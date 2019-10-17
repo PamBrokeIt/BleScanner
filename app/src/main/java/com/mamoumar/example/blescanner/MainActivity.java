@@ -1,6 +1,7 @@
 package com.mamoumar.example.blescanner;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -13,12 +14,21 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -36,12 +46,15 @@ public class MainActivity extends AppCompatActivity {
     BluetoothLeScanner miBlueScanner;
 
     private final static int REQUEST_ENABLE_BT = 1;
-    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 2;
 
     private String TAG = "MainActivity";
 
     Button botonEmpezarEscaneo;
     Button botonPararEscaneo;
+
+    private FusedLocationProviderClient client;
+    Location miUbicacion = new Location("");
     //------------------------------------------------------------------------------------
     //Variables
     //------------------------------------------
@@ -50,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     //------------------------------------------
     //OnCreate
     //------------------------------------------------------------------------------------
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Se necesita el acceso a la ubicación");
-            builder.setMessage("Por favor acepte el acceso a la app para poder detectar dispositivos.");
+            builder.setMessage("Por favor acepte el acceso a la app para poder detectar los dispositivos y su ubicación.");
             builder.setPositiveButton(android.R.string.ok, null);
             builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
@@ -96,8 +108,9 @@ public class MainActivity extends AppCompatActivity {
             builder.show();
         }
 
-    }
 
+        client = LocationServices.getFusedLocationProviderClient(this);
+    }
     //------------------------------------------------------------------------------------
     //OnCreate
     //------------------------------------------
@@ -105,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //------------------------------------------
-    //Empezar - Parar - callback escaner
+    // Escaner empezar - Parar - callback
     //------------------------------------------------------------------------------------
     private void empezarEscaneo(){
         AsyncTask.execute(new Runnable() {
@@ -132,6 +145,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onScanResult(int callbackType, ScanResult resultado) {
 
+            dondeEstoy();
+
             Log.i(TAG, "Dipositivo: " + resultado.getScanRecord());
             /*
             Log.i( TAG, "Manufacterer: " + resultado.getScanRecord().getManufacturerSpecificData(76));
@@ -156,8 +171,25 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     //------------------------------------------------------------------------------------
-    //Empezar - Parar escaner
+    //Escaner empezar - Parar - callback
     //------------------------------------------
 
 
+    //------------------------------------------
+    //Localizacion
+    //------------------------------------------------------------------------------------
+    private void dondeEstoy(){
+        client.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location localizacion) {
+                if(localizacion != null){
+                    Log.d("UBICACION: ", localizacion.toString());
+                    miUbicacion = localizacion;
+                }
+            }
+        });
+    }
+    //------------------------------------------------------------------------------------
+    //Localizacion
+    //------------------------------------------
 }
